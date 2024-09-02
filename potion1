@@ -1,0 +1,248 @@
+// main class
+package homework1;
+import java.util.*;
+
+public class Homework1 { 
+
+    //heba mustafa
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        PotionInventory inventory = new PotionInventory();
+
+        String ingredientNames[] = {"Adder's Tongue", "Dandelion Leaf", "Thyme", "Dandelion Root", "Cactus", "Laurel",
+                "Rose Petals", "Nettle", "Eyelashes", "Black Sand", "Gum Arabic", "Anemone",
+                "Sparrow Entrails", "Gargamel's white-hair", "Lemon Zest", "Oregano",
+                "Skullcap", "Four-leaf Clover", "Solomon's Seal"};
+
+        for (String name : ingredientNames) {
+            inventory.addIngredient(new Ingredient(name, 10)); 
+            //  a count of 10 for each ingredient
+        }
+
+        //  consume a potion
+        Potion potionToConsume = new Potion(3, "Youth Elixir", "Rare", new LinkedList<>(Arrays.asList(new Ingredient("Herb of Vitality", 1))));
+        inventory.consumePotion(potionToConsume);
+
+        // request a potion
+        Potion potionRequest = new Potion(4, "Invisibility Brew", "Legendary", new LinkedList<>(Arrays.asList(new Ingredient("Eyelashes", 1))));
+        inventory.requestPotion(potionRequest);
+        System.out.println(potionToConsume);
+        System.out.print("\nConsumed Potions: ");
+        inventory.ConsumedPotions();
+        System.out.print("Pending Potion Requests: ");
+        inventory.PotionRequests();
+        System.out.println();
+        System.out.print("Enter the number of potions to create: ");
+        int numPotions = scanner.nextInt();
+        scanner.nextLine();
+
+        for (int i = 0; i < numPotions; i++) {
+            System.out.println("Creating Potion #" + (i + 1));
+
+            System.out.print("Enter potion name: ");
+            String name = scanner.nextLine();
+
+            System.out.print("Enter potion rarity (Common/Rare/Legendary): ");
+            String rarity = scanner.nextLine();
+
+            System.out.print("Enter number of ingredients: ");
+            int numIngredients = scanner.nextInt();
+            scanner.nextLine();
+
+            LinkedList<Ingredient> potionIngredients = new LinkedList<>(); 
+
+            for (int j = 0; j < numIngredients; j++) {
+                System.out.print("Enter ingredient #" + (j + 1) + ": ");
+                String ingredientName = scanner.nextLine();
+                Ingredient ingredient = null;
+
+                for (Ingredient ing : inventory.getIngredients()) {
+                    if (ing.getName().equalsIgnoreCase(ingredientName)) {
+                        ingredient = ing;
+                        break;
+                    }
+                }
+
+                if (ingredient != null && ingredient.getCount() > 0) {
+                    potionIngredients.add(ingredient);
+                    ingredient.setCount(ingredient.getCount() - 1);
+                } else {
+                    System.out.println("Ingredient " + ingredientName + " not found");
+                }
+            }
+            System.out.println();
+            System.out.println("Custom potions created:\n");
+            Potion potion = new Potion(i + 1, name, rarity, potionIngredients);
+            inventory.addPotion(potion);
+            System.out.println(potion);
+            System.out.println();
+        }
+
+
+    }
+}
+//class Ingredient
+
+package homework1;
+
+
+class Ingredient {
+    private String name;
+    private int count;
+
+    public Ingredient(String name, int count) {
+        this.name = name;
+        this.count = count;
+    }
+    //setters and getters 
+    public String getName() {
+        return name;
+    }
+   
+    public int getCount() {
+        return count;
+    }
+    public void setCount(int count) {
+        this.count = count;
+    }
+
+    public String toString() {
+        return name  ;
+    }
+}
+//class potion
+package homework1;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
+class Potion {
+    private int potionID;
+    private String name;
+    private String rarity;
+    private LinkedList<Ingredient> ingredients; 
+    private double cost;
+
+    public Potion(int potionID, String name, String rarity, LinkedList<Ingredient> ingredients) {
+        this.potionID = potionID;
+        this.name = name;
+        this.rarity = rarity;
+        this.ingredients = ingredients;
+        this.cost = calculateCost();
+    }
+
+    private double calculateCost() {
+        int ingredientCount = ingredients.size();
+        switch (rarity.toLowerCase()) {
+            case "common":
+                return ingredientCount * 10 + 15;
+            case "rare":
+                return ingredientCount * 10 + 70;
+            case "legendary":
+                return ingredientCount * 10 + 120;
+            default:
+                return 0;
+        }
+    }
+
+    public int getPotionID() {
+        return potionID;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getRarity() {
+        return rarity;
+    }
+
+    public LinkedList<Ingredient> getIngredients() {
+        return ingredients;
+    }
+
+    public double getCost() {
+        return cost;
+    }
+
+    @Override
+    public String toString() {
+        return "Potion ID: " + potionID +
+               "\nPotion Name: " + name +
+               "\nIngredients: " + ingredients +
+               "\nRarity: " + rarity +
+               "\nPotion Value: $" + cost;
+    }
+}
+// class  PotionInventory
+package homework1;
+
+import java.util.*;
+class PotionInventory {
+    private List<Potion> allPotions;
+    private Stack<Potion> consumedPotions;
+    private Queue<Potion> potionRequests;
+    private LinkedList<Ingredient> ingredients; 
+
+    public PotionInventory() {
+        allPotions = new ArrayList<>();
+        consumedPotions = new Stack<>();
+        potionRequests = new LinkedList<>();
+        ingredients = new LinkedList<>(); 
+    }
+
+    public void addIngredient(Ingredient ingredient) {
+        ingredients.add(ingredient);
+    }
+
+    public void addPotion(Potion potion) {
+        allPotions.add(potion);
+    }
+
+    public void consumePotion(Potion potion) {
+        consumedPotions.push(potion);
+        allPotions.remove(potion);
+    }
+
+    public void requestPotion(Potion potion) {
+        potionRequests.add(potion);
+    }
+
+    public List<Potion> getAllPotions() {
+        return allPotions;
+    }
+
+    public Stack<Potion> getConsumedPotions() {
+        return consumedPotions;
+    }
+
+    public Queue<Potion> getPotionRequests() {
+        return potionRequests;
+    }
+
+    public LinkedList<Ingredient> getIngredients() {
+        return ingredients;
+    }
+
+    public void displayAllPotions() {
+        for (Potion potion : allPotions) {
+            System.out.println(potion);
+        }
+    }
+
+ 
+
+    public void ConsumedPotions() {
+        for (Potion potion : consumedPotions) {
+            System.out.println("[ "+potion.getName()+" ]");
+        }
+    }
+
+    public void PotionRequests() {
+        for (Potion potion : potionRequests) {
+            System.out.println("[ "+ potion.getName()+" ]");
+            
+        }
+    }
+}
