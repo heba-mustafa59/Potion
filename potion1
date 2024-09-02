@@ -3,7 +3,6 @@ package homework1;
 import java.util.*;
 
 public class Homework1 { 
-
     //heba mustafa
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
