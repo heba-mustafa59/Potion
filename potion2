@@ -1,0 +1,282 @@
+// Heba Mustafa
+package hw1;
+
+import java.util.LinkedList;
+import java.util.Scanner;
+// main class
+public class Hw1 {
+      public static void main(String[] args) {
+        PotionInventory inventory = new PotionInventory();
+        inventory.addIngredient(new Ingredient("Dragon Scale", 50.0, 7));
+        inventory.addIngredient(new Ingredient("Phoenix Feather", 25.0, 3));
+        inventory.addIngredient(new Ingredient("Unicorn Horn", 100.0, 5));
+        inventory.addIngredient(new Ingredient("Mermaid Tear", 75.0, 8));
+        System.out.println("Initial Ingredient Inventory:");
+        inventory.checkInventory();
+        inventory.restockIngredients(8);
+        System.out.println("\nInventory after restocking:");
+        inventory.checkInventory();
+
+        LinkedList<Ingredient> potionIngredients1 = new LinkedList<>();
+       potionIngredients1.add(new Ingredient("Dragon Scale", 50.0, 2));
+        potionIngredients1.add(new Ingredient("Phoenix Feather", 25.0, 1));
+        Potion potion1 = new Potion(1, "Elixir of Immortality", "Legendary", potionIngredients1);
+
+        LinkedList<Ingredient> potionIngredients2 = new LinkedList<>();
+        potionIngredients2.add(new Ingredient("Unicorn Horn", 100.0, 1));
+        potionIngredients2.add(new Ingredient("Mermaid Tear", 75.0, 2));
+        Potion potion2 = new Potion(2, "Ocean's Blessing", "Rare", potionIngredients2);
+
+        inventory.addPotion(potion1);
+        inventory.addPotion(potion2);
+        System.out.println("\nAll Potions in Inventory:");
+        inventory.listAllPotions();
+
+        inventory.requestPotion(potion1);
+        inventory.requestPotion(potion1);
+        inventory.requestPotion(potion2);
+
+        // Find most popular potion
+        Potion p = inventory.findMostPopularPotion();
+        System.out.println("\nMost Popular Potion: " + p);
+
+        
+        double cost = inventory.calculateCost(potion1);
+        System.out.println("\nCost of " + potion1.getName() + ": $" + cost);
+
+        Ingredient f = inventory.searchIngredientRecursively("Crystal", 0, inventory.ingredients.size() - 1);
+        if (f != null) {
+            System.out.println("\nIngredient found: " + f.getName());
+        } else {
+            System.out.println("\nIngredient not found.");
+        }
+
+        inventory.updatePotionIngredientQuantity(1, "Herb", 5);
+        System.out.println("\nUpdated Potion Ingredients:");
+        inventory.listAllPotions();
+
+        inventory.removePotion(2);
+        System.out.println("\nPotions after removal:");
+        inventory.listAllPotions();
+    }
+}
+//Ingredient  class
+package hw1;
+class Ingredient {
+    private String name;
+    private double cost;
+    private int count;
+
+    public Ingredient(String name, double cost, int count) {
+        this.name = name;
+        this.cost = cost;
+        this.count = count;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public double getCost() {
+        return cost;
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
+    }
+}
+// potion class
+package hw1;
+import java.util.LinkedList;
+class Potion {
+    private int id;
+    private String name;
+    private String rarity;
+    private LinkedList<Ingredient> ingredients;
+    private int requestCount = 1;
+
+    public Potion(int id, String name, String rarity, LinkedList<Ingredient> ingredients) {
+        this.id = id;
+        this.name = name;
+        this.rarity = rarity;
+        this.ingredients = ingredients;
+    }
+
+    public int getPotionID() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public LinkedList<Ingredient> getIngredients() {
+        return ingredients;
+    }
+
+    public int getRequestCount() {
+        return requestCount;
+    }
+
+    public void incrementRequestCount() {
+        requestCount++;
+    }
+
+    @Override
+    public String toString() {
+        return "Potion ID: " + id + ", Name: " + name + ", Rarity: " + rarity + ", Requests: " + requestCount;
+    }
+}
+// PotionInventory class
+package hw1;
+import java.util.LinkedList;
+class PotionInventory {
+    LinkedList<Ingredient> ingredients = new LinkedList<>();
+    private LinkedList<Potion> potionList = new LinkedList<>();
+
+    // Add ingredients to the inventory
+    public void addIngredient(Ingredient ingredient) {
+        ingredients.add(ingredient);
+    }
+
+    // Recursive Ingredient Search
+    public Ingredient searchIngredientRecursively(String name, int start, int end) {
+        if (start > end) {
+            return null;
+        }
+
+        int mid = (start + end) / 2;
+        Ingredient midIngredient = ingredients.get(mid);
+
+        if (midIngredient.getName().equalsIgnoreCase(name)) {
+            return midIngredient;
+        } else if (midIngredient.getName().compareToIgnoreCase(name) > 0) {
+            return searchIngredientRecursively(name, start, mid - 1);
+        } else {
+            return searchIngredientRecursively(name, mid + 1, end);
+        }
+    }
+
+    // Potion Popularity Tracking
+    public void requestPotion(Potion potion) {
+        potion.incrementRequestCount();
+        potionList.add(potion);
+        System.out.println(potion);
+    }
+
+    // Advanced Cost Calculation
+    public double calculateCost(Potion potion) {
+        double baseCost = 0;
+        for (Ingredient ingredient : potion.getIngredients()) {
+            baseCost += ingredient.getCost();
+        }
+
+        int requests = potion.getRequestCount();
+        if (requests > 10) {
+            return baseCost * 0.8;
+        } else if (requests > 5) {
+            return baseCost * 0.9;
+        }
+        return baseCost;
+    }
+
+    // Ingredient Restocking
+    public void restockIngredients(int threshold) {
+        for (Ingredient ingredient : ingredients) {
+            if (ingredient.getCount() < threshold) {
+                restockIngredientRecursively(ingredient);
+                System.out.println("Restocked: " + ingredient.getName());
+            }
+        }
+    }
+
+    private void restockIngredientRecursively(Ingredient ingredient) {
+        if (ingredient.getCount() < 10) {
+            ingredient.setCount(ingredient.getCount() + 1);
+            restockIngredientRecursively(ingredient);
+        }
+    }
+    //  most popular potion
+    public Potion findMostPopularPotion() {
+        Potion mostPopular = null;
+        for (Potion potion : potionList) {
+            if (mostPopular == null || potion.getRequestCount() > mostPopular.getRequestCount()) {
+                mostPopular = potion;
+            }
+        }
+        return mostPopular;
+    }
+
+    //  remove a potion from the inventory
+    public boolean removePotion(int potionID) {
+        Potion potionToRemove = null;
+        for (Potion p : potionList) {
+            if (p.getPotionID() == potionID) {
+                potionToRemove = p;
+                break;
+            }
+        }
+        if (potionToRemove != null) {
+            potionList.remove(potionToRemove);
+            System.out.println("Potion ID " + potionID + " removed.");
+            return true;
+        } else {
+            System.out.println("Potion ID " + potionID + " not found.");
+            return false;
+        }
+    }
+
+    // list all available potions
+    public void listAllPotions() {
+        if (potionList.isEmpty()) {
+            System.out.println("No potions in inventory.");
+        } else {
+            for (Potion p : potionList) {
+                System.out.println(p);
+            }
+        }
+    }
+    //  update the quantity of a specific ingredient in a potion
+    public void updatePotionIngredientQuantity(int potionID, String ingredientName, int newQuantity) {
+        for (Potion p : potionList) {
+            if (p.getPotionID() == potionID) {
+                for (Ingredient i : p.getIngredients()) {
+                    if (i.getName().equals(ingredientName)) {
+                        i.setCount(newQuantity);
+                        System.out.println("Updated " + ingredientName + " quantity to " + newQuantity + " in potion " + p.getName());
+                        return;
+                    }
+                }
+            }
+        }
+        System.out.println("Potion or ingredient not found.");
+    }
+
+    // add a potion to the inventory
+    public void addPotion(Potion potion) {
+        potionList.add(potion);
+        System.out.println("Potion added: " + potion.getName());
+    }
+
+    //  search for a potion by ID
+    public Potion searchPotionByID(int potionID) {
+        for (Potion p : potionList) {
+            if (p.getPotionID() == potionID) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    // check the inventory of ingredients
+    public void checkInventory() {
+        for (Ingredient i : ingredients) {
+            System.out.println("Ingredient: " + i.getName() + ", Quantity: " + i.getCount());
+        }
+    }
+
+}
